@@ -12,3 +12,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username);
 
 -- Crea un índice para búsquedas rápidas por email
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email);
+
+-- Tabla para pruebas de GET y POST
+CREATE TABLE IF NOT EXISTS test_items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índice para búsquedas por nombre
+CREATE INDEX IF NOT EXISTS idx_test_items_name ON test_items (name);
