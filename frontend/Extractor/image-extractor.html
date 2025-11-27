@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extractor de Imágenes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes slide-left {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      .carousel-track {
+        animation: slide-left 22s linear infinite;
+      }
+
+      .carousel-track:hover {
+        animation-play-state: paused;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <main class="mx-auto max-w-6xl px-4 py-10 space-y-10">
+      <header class="space-y-4">
+        <p class="text-xs uppercase tracking-[0.35em] text-slate-400">Instagram toolkit</p>
+        <h1 class="text-3xl font-semibold text-white">Extractor de Imágenes</h1>
+        <p class="text-slate-400">
+          Pega una URL pública de Instagram para recuperar la imagen, extraer texto con OCR y contrastar los textos con Gemini.
+        </p>
+      </header>
+
+      <section class="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/40 space-y-5">
+        <div class="flex flex-col gap-4 lg:flex-row">
+          <label class="flex-1 text-sm text-slate-300" for="urlInput">
+            URL de Instagram
+            <input
+              id="urlInput"
+              type="text"
+              placeholder="https://www.instagram.com/p/..."
+              class="mt-1 w-full rounded-xl border border-white/10 bg-slate-900/40 px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
+            />
+          </label>
+
+          <div class="flex flex-1 flex-col gap-3 sm:flex-row">
+            <button
+              id="extractBtn"
+              class="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-700 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-900/30 transition hover:from-indigo-400 hover:to-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Extraer imagen
+            </button>
+            <button
+              id="contrastBtn"
+              class="flex-1 rounded-xl bg-gradient-to-r from-fuchsia-500 to-purple-700 px-5 py-3 font-medium text-white shadow-lg shadow-purple-900/30 transition hover:from-fuchsia-400 hover:to-purple-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Analizar textos
+            </button>
+            <button
+              id="resetFlowBtn"
+              class="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-rose-800 px-5 py-3 font-medium text-white shadow-lg shadow-rose-900/30 transition hover:from-rose-500 hover:to-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Reiniciar Flujo
+            </button>
+          </div>
+        </div>
+
+        <div id="errorBox" class="hidden rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"></div>
+
+        <div class="flex items-center justify-between mb-2 text-sm text-slate-300">
+          <span class="uppercase tracking-[0.3em] text-slate-400">Analisis de textos</span>
+          <button id="toggleAnalysisPanel" class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 hover:text-white">
+            <svg id="toggleIcon" class="w-4 h-4 inline-block transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="analysisPanel" class="hidden">
+          <div class="mt-3 rounded-lg border border-purple-200 bg-white p-3 text-sm text-gray-700 shadow-sm max-h-96 overflow-y-auto">
+            <p class="mb-1 text-xs text-gray-500">
+              Fuente: <span id="analysisSource">output_analisis.txt</span> · 
+              <span id="analysisLength">0</span> caracteres
+            </p>
+            <div class="whitespace-pre-wrap" id="analysisText"></div>
+          </div>
+        </div>
+        
+
+       
+      </section>
+
+      <section class="space-y-4">
+        <div class="flex items-center justify-between text-sm text-slate-400">
+          <span>Vitrina principal</span>
+          <span id="imageCounter">0 / 4 imágenes</span>
+        </div>
+        <div id="imagesGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
+        <div id="emptyState" class="rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center text-slate-500">
+          Aún no hay imágenes seleccionadas. Agrega nuevas desde Instagram o desde las miniaturas recientes.
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <div class="flex items-center justify-between text-sm text-slate-400">
+          <span>Miniaturas recientes</span>
+          <button id="refreshThumbs" class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 hover:text-white">Actualizar</button>
+        </div>
+        <div id="thumbnailsSection" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-6">
+          <div id="thumbLoader" class="flex items-center justify-center py-10 text-slate-400">
+            <svg class="h-8 w-8 animate-spin text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+          </div>
+          <div id="carouselWrapper" class="hidden overflow-hidden">
+            <div id="carouselTrack" class="carousel-track flex gap-4"></div>
+          </div>
+          <div id="noThumbs" class="hidden rounded-xl border border-dashed border-white/10 px-6 py-10 text-center text-slate-500">
+            No hay miniaturas disponibles. Asegúrate de que el servicio de miniaturas (puerto 5001) esté en ejecución.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="imageCardTemplate">
+      <article class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+        <img class="image-photo h-64 w-full object-cover" alt="Imagen seleccionada" />
+        <div class="absolute inset-0 bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100"></div>
+        <button class="remove-btn absolute right-3 top-3 rounded-full bg-red-500/90 p-2 text-white shadow-lg shadow-black/40 transition hover:bg-red-400" title="Eliminar">
+          🗑
+        </button>
+        <div class="space-y-2 bg-gradient-to-b from-transparent via-black/60 to-black/80 px-4 pb-4 pt-16 text-xs text-white">
+          <div class="inline-flex items-center gap-2 rounded-full bg-black/50 px-3 py-1">
+            <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
+            <span class="timestamp font-mono"></span>
+          </div>
+          <div class="extracted-text hidden rounded-xl bg-black/50 px-3 py-2 text-[0.8rem] leading-relaxed"></div>
+          <div class="analysis-text hidden rounded-xl bg-purple-600/40 px-3 py-2 text-[0.8rem] leading-relaxed"></div>
+        </div>
+      </article>
+    </template>
+
+    <script>
+      const buildBackendBase = (port = 5000) => {
+        const { protocol, hostname } = window.location;
+        return `${protocol}//${hostname}:${port}`;
+      };
+
+      const API_BASE = buildBackendBase(5000);
+      const THUMBNAIL_BASE = API_BASE;
+      const THUMBNAIL_REFRESH_INTERVAL_MS = 15000;
+      const GALLERY_REFRESH_INTERVAL_MS = 15000;
+
+      const elements = {
+        urlInput: document.getElementById('urlInput'),
+        extractBtn: document.getElementById('extractBtn'),
+        contrastBtn: document.getElementById('contrastBtn'),
+        resetFlowBtn: document.getElementById('resetFlowBtn'),
+        imagesGrid: document.getElementById('imagesGrid'),
+        emptyState: document.getElementById('emptyState'),
+        imageCounter: document.getElementById('imageCounter'),
+        errorBox: document.getElementById('errorBox'),
+        analysisPanel: document.getElementById('analysisPanel'),
+        analysisMeta: document.getElementById('analysisMeta'),
+        analysisText: document.getElementById('analysisText'),
+        analysisOutputWrapper: document.getElementById('analysisOutputWrapper'),
+        analysisOutputText: document.getElementById('analysisOutputText'),
+        analysisFilePanel: document.getElementById('analysisFilePanel'),
+        analysisFileText: document.getElementById('analysisFileText'),
+        refreshAnalysisFile: document.getElementById('refreshAnalysisFile'),
+        showAnalysisBtn: document.getElementById('showAnalysisBtn'),
+        refreshThumbs: document.getElementById('refreshThumbs'),
+        thumbLoader: document.getElementById('thumbLoader'),
+        carouselWrapper: document.getElementById('carouselWrapper'),
+        carouselTrack: document.getElementById('carouselTrack'),
+        noThumbs: document.getElementById('noThumbs'),
+        toggleAnalysisPanel: document.getElementById('toggleAnalysisPanel'),
+        toggleIcon: document.getElementById('toggleIcon')
+      };
+
+      const REMOVED_MANAGED_KEY = 'removedManagedIds';
+
+      const state = {
+        url: '',
+        images: [],
+        thumbnails: [],
+        selectedThumbnailId: null,
+        error: '',
+        isLoading: false,
+        isAnalyzing: false,
+        analysisResult: '',
+        analysisMetadata: null,
+        isLoadingThumbnails: false,
+        removedManagedIds: new Set(),
+      };
+
+      const joinUrl = (base, path) => `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+
+      const persistImages = () => {
+        localStorage.setItem('savedInstagramImages', JSON.stringify(state.images));
+      };
+
+      const persistRemovedManagedIds = () => {
+        localStorage.setItem(REMOVED_MANAGED_KEY, JSON.stringify([...state.removedManagedIds]));
+      };
+
+      const loadSavedImages = () => {
+        const cached = localStorage.getItem('savedInstagramImages');
+        if (!cached) return;
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            state.images = parsed;
+          }
+        } catch (error) {
+          console.warn('No se pudieron cargar las imágenes guardadas', error);
+        }
+      };
+
+      const loadRemovedManagedIds = () => {
+        const cached = localStorage.getItem(REMOVED_MANAGED_KEY);
+        if (!cached) return;
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            state.removedManagedIds = new Set(parsed);
+          }
+        } catch (error) {
+          console.warn('No se pudieron cargar las imágenes descartadas', error);
+        }
+      };
+
+      const setError = (message) => {
+        state.error = message;
+        elements.errorBox.textContent = message;
+        elements.errorBox.classList.toggle('hidden', !message);
+      };
+
+      const setAnalysisButtonLabel = () => {
+        const btn = elements.contrastBtn;
+        if (!btn) return;
+
+        if (state.isAnalyzing) {
+          btn.textContent = 'Analizando...';
+          btn.disabled = true;
+          return;
+        }
+
+        const hasAnalysis = Boolean(state.analysisResult);
+        const isVisible = elements.analysisPanel && !elements.analysisPanel.classList.contains('hidden');
+
+        btn.disabled = false;
+        if (!hasAnalysis) {
+          btn.textContent = 'Analizar textos';
+        } else {
+          btn.textContent = isVisible ? 'Ocultar análisis' : 'Mostrar análisis';
+        }
+      };
+
+      const updateButtons = () => {
+        elements.extractBtn.disabled = state.isLoading;
+        elements.extractBtn.textContent = state.isLoading ? 'Extrayendo…' : 'Extraer imagen';
+        setAnalysisButtonLabel();
+      };
+
+      const renderImages = () => {
+        const { images } = state;
+        elements.imageCounter.textContent = `${images.length} / 4 imágenes`;
+        elements.emptyState.classList.toggle('hidden', images.length > 0);
+        elements.imagesGrid.innerHTML = '';
+
+        if (!images.length) return;
+
+        const fragment = document.createDocumentFragment();
+        images.forEach((image) => {
+          const template = document.getElementById('imageCardTemplate');
+          const card = template.content.firstElementChild.cloneNode(true);
+          card.querySelector('.image-photo').src = image.url;
+          card.querySelector('.timestamp').textContent = new Date(image.timestamp).toLocaleString();
+
+          const textBox = card.querySelector('.extracted-text');
+          const analysisBox = card.querySelector('.analysis-text');
+
+          if (image.extractedText) {
+            textBox.textContent = image.extractedText;
+            textBox.classList.remove('hidden');
+          }
+
+          if (image.analysis) {
+            analysisBox.textContent = image.analysis;
+            analysisBox.classList.remove('hidden');
+          }
+
+          const removeBtn = card.querySelector('.remove-btn');
+          removeBtn.addEventListener('click', () => {
+            if (image.managed) {
+              state.removedManagedIds.add(image.id);
+              persistRemovedManagedIds();
+            }
+
+            state.images = state.images.filter((img) => img.id !== image.id);
+            persistImages();
+            renderImages();
+          });
+
+          fragment.appendChild(card);
+        });
+
+        elements.imagesGrid.appendChild(fragment);
+      };
+
+      
+      const renderAnalysis = () => {
+        console.log('[RENDER_ANALYSIS] Iniciando renderizado del an?lisis...');
+        
+        if (!state.analysisResult) {
+          console.log('[RENDER_ANALYSIS] No hay an?lisis para mostrar, ocultando panel');
+          elements.analysisPanel.classList.add('hidden');
+          setAnalysisButtonLabel();
+          return;
+        }
+
+        console.log('[RENDER_ANALYSIS] Mostrando panel de an?lisis');
+        elements.analysisPanel.classList.remove('hidden');
+        
+        try {
+          console.log('[RENDER_ANALYSIS] Estableciendo contenido del an?lisis');
+          elements.analysisText.textContent = state.analysisResult;
+          
+          // Actualizar metadatos del an?lisis
+          const source = state.analysisMetadata?.source_file || 'output_analisis.txt';
+          const length = state.analysisMetadata?.length || state.analysisResult.length;
+          
+          console.log(`[RENDER_ANALYSIS] Actualizando metadatos - Fuente: ${source}, Longitud: ${length}`);
+          
+          document.getElementById('analysisSource').textContent = source.split('/').pop();
+          document.getElementById('analysisLength').textContent = length;
+          
+          console.log('[RENDER_ANALYSIS] Actualizando etiqueta del bot?n');
+          setAnalysisButtonLabel();
+          
+          console.log('[RENDER_ANALYSIS] Renderizado completado exitosamente');
+        } catch (error) {
+          console.error('[RENDER_ANALYSIS] Error al renderizar el an?lisis:', error);
+          setError('Error al mostrar el an?lisis: ' + error.message);
+        }
+      };
+
+      const loadAnalysisFile = async () => {
+        try {
+          const response = await fetch(joinUrl(API_BASE, '/analysis-output'));
+          const data = await response.json();
+
+          if (!response.ok || !(data && data.success)) {
+            throw new Error((data && data.error) || 'No se pudo cargar output_analisis.txt');
+          }
+
+          const content = (data.text || data.content || '').trim();
+          state.analysisResult = content;
+          state.analysisMetadata = data.metadata || null;
+
+          if (elements.analysisFileText) {
+            elements.analysisFileText.textContent = content || 'El archivo esta vacio.';
+          }
+          if (elements.analysisFilePanel) elements.analysisFilePanel.classList.remove('hidden');
+          if (elements.analysisPanel) elements.analysisPanel.classList.remove('hidden');
+          if (elements.analysisOutputWrapper && elements.analysisOutputText) {
+            elements.analysisOutputWrapper.classList.remove('hidden');
+            elements.analysisOutputText.textContent = content;
+          }
+
+          renderAnalysis();
+        } catch (error) {
+          console.error('[analysis] Error al cargar el archivo de analisis:', error);
+          setError('No se pudo cargar el archivo de analisis. ' + (error && error.message ? error.message : ''));
+        }
+      };
+
+      const renderThumbnails = () => {
+        const { thumbnails, selectedThumbnailId, isLoadingThumbnails } = state;
+        elements.thumbLoader.classList.toggle('hidden', !isLoadingThumbnails);
+        elements.carouselWrapper.classList.toggle('hidden', isLoadingThumbnails || !thumbnails.length);
+        elements.noThumbs.classList.toggle('hidden', isLoadingThumbnails || thumbnails.length > 0);
+
+        if (!thumbnails.length || isLoadingThumbnails) return;
+
+        const track = elements.carouselTrack;
+        track.innerHTML = '';
+
+        const renderThumb = (thumb) => {
+          const isSelected = thumb.id === selectedThumbnailId;
+          const wrapper = document.createElement('button');
+          wrapper.type = 'button';
+          wrapper.className = [
+            'relative h-48 min-w-[170px] overflow-hidden rounded-2xl border transition',
+            isSelected ? 'border-indigo-400 ring-4 ring-indigo-400/40' : 'border-white/10',
+          ].join(' ');
+
+          wrapper.innerHTML = `
+            <img src="${thumb.url}" alt="${thumb.filename}" class="h-full w-full object-cover" />
+            <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 text-left text-white">
+              <span class="text-xs font-semibold">${thumb.filename}</span>
+            </div>
+          `;
+
+          wrapper.addEventListener('click', () => handleThumbnailClick(thumb));
+          return wrapper;
+        };
+
+        const loopData = [...thumbnails, ...thumbnails];
+        loopData.forEach((thumb) => track.appendChild(renderThumb(thumb)));
+      };
+
+      const renderAll = () => {
+        renderImages();
+        renderAnalysis();
+        renderThumbnails();
+        updateButtons();
+      };
+
+      const saveExtractedText = async (text, filename = 'extracted_texts.txt') => {
+        try {
+          await fetch(joinUrl(API_BASE, '/save-text'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, filename }),
+          });
+        } catch (error) {
+          console.warn('No se pudo guardar el texto', error);
+        }
+      };
+
+      const extractTextFromImage = async (imageUrl) => {
+        try {
+          const response = await fetch(joinUrl(API_BASE, '/extract-text'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_url: imageUrl }),
+          });
+          const data = await response.json();
+          return data?.text || '';
+        } catch (error) {
+          console.warn('Error OCR:', error);
+          return '';
+        }
+      };
+
+      const handleThumbnailClick = async (thumbnail) => {
+        if (state.selectedThumbnailId === thumbnail.id) {
+          state.selectedThumbnailId = null;
+          renderThumbnails();
+          return;
+        }
+
+        if (state.images.some((img) => img.id === thumbnail.id)) {
+          setError('Esta miniatura ya está en la vitrina principal.');
+          return;
+        }
+
+        if (state.images.length >= 4) {
+          setError('Has alcanzado el límite de 4 imágenes.');
+          return;
+        }
+
+        state.selectedThumbnailId = thumbnail.id;
+        renderThumbnails();
+
+        const newImage = {
+          id: thumbnail.id,
+          url: thumbnail.url,
+          timestamp: Date.now(),
+          managed: false,
+        };
+
+        const extractedText = await extractTextFromImage(thumbnail.url);
+        if (extractedText) {
+          newImage.extractedText = extractedText;
+          await saveExtractedText(extractedText);
+        }
+
+        state.images.push(newImage);
+        persistImages();
+        renderImages();
+      };
+
+      const fetchThumbnails = async () => {
+        state.isLoadingThumbnails = true;
+        renderThumbnails();
+        try {
+          const response = await fetch(joinUrl(THUMBNAIL_BASE, '/api/thumbnails'));
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            const now = Date.now();
+            state.thumbnails = data
+              .filter((filename) => typeof filename === 'string')
+              .map((filename, index) => ({
+                id: `thumb-${now}-${index}`,
+                url: joinUrl(THUMBNAIL_BASE, `/thumbnails/${filename}`),
+                filename,
+              }));
+          } else {
+            state.thumbnails = [];
+          }
+        } catch (error) {
+          console.warn('No se pudieron obtener las miniaturas', error);
+          state.thumbnails = [];
+        } finally {
+          state.isLoadingThumbnails = false;
+          renderThumbnails();
+        }
+      };
+
+      const handleExtract = async () => {
+        const trimmed = state.url.trim();
+        if (!trimmed) {
+          setError('Ingresa una URL válida de Instagram.');
+          return;
+        }
+
+        if (state.images.length >= 4) {
+          setError('Has alcanzado el límite de 4 imágenes.');
+          return;
+        }
+
+        state.isLoading = true;
+        setError('');
+        updateButtons();
+
+        try {
+          const response = await fetch(joinUrl(API_BASE, '/extract-image'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: trimmed }),
+          });
+
+          if (!response.ok) throw new Error('No se pudo obtener la imagen.');
+          const data = await response.json();
+          if (!data?.success || !data?.image_url) throw new Error(data?.error || 'Respuesta inválida.');
+
+          const newImage = {
+            id: String(Date.now()),
+            url: data.image_url,
+            timestamp: Date.now(),
+            managed: false,
+          };
+
+          state.images.push(newImage);
+          persistImages();
+          renderImages();
+          state.url = '';
+          elements.urlInput.value = '';
+        } catch (error) {
+          setError(error.message || 'Error al extraer la imagen.');
+        } finally {
+          state.isLoading = false;
+          updateButtons();
+        }
+      };
+
+      const fetchGallery = async () => {
+        try {
+          const response = await fetch(joinUrl(API_BASE, '/api/gallery'));
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            const normalized = data.slice(0, 4).map((item) => ({
+              id: item.id || item.filename || item.url,
+              url: item.url,
+              timestamp: item.timestamp ? Number(item.timestamp) * 1000 : Date.now(),
+              filename: item.filename,
+              managed: true,
+            }));
+            const manualImages = state.images.filter((img) => !img.managed);
+            const manualIds = new Set(manualImages.map((img) => img.id));
+            const managedFiltered = normalized.filter(
+              (img) => !state.removedManagedIds.has(img.id) && !manualIds.has(img.id)
+            );
+
+            const combined = [...manualImages, ...managedFiltered].slice(0, 4);
+            state.images = combined;
+            persistImages();
+            renderImages();
+          }
+        } catch (error) {
+          console.warn('No se pudo sincronizar la vitrina principal', error);
+        }
+      };
+
+      const toggleAnalysisVisibility = () => {
+        const panel = elements.analysisPanel;
+        const isHidden = panel.classList.contains('hidden');
+        
+        if (isHidden) {
+          panel.classList.remove('hidden');
+          if (elements.toggleIcon) {
+            elements.toggleIcon.classList.add('rotate-180');
+          }
+        } else {
+          panel.classList.add('hidden');
+          if (elements.toggleIcon) {
+            elements.toggleIcon.classList.remove('rotate-180');
+          }
+        }
+        
+        // Actualizar el texto del botón de análisis
+        setAnalysisButtonLabel();
+      };
+
+      const contrastImages = async () => {
+        // Si ya hay un análisis y el panel está oculto, solo mostrarlo
+        if (state.analysisResult) {
+          toggleAnalysisVisibility();
+          return;
+        }
+
+        if (state.isAnalyzing) return;
+        state.isAnalyzing = true;
+        setError('');
+        updateButtons();
+
+        try {
+          const response = await fetch(joinUrl(API_BASE, '/contrast-texts'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+
+          let data = null;
+          try {
+            data = await response.json();
+          } catch (jsonError) {
+            console.warn('No se pudo parsear la respuesta de contraste', jsonError);
+            throw new Error('Error al procesar la respuesta del servidor');
+          }
+
+          if (!response.ok) {
+            const message = (data && data.error) || 'No se pudo contactar al servicio de contraste.';
+            throw new Error(message);
+          }
+
+          if (data && data.success) {
+            state.analysisResult = (data.analysis || '').trim();
+            renderAnalysis();
+            // Mostrar el panel después de cargar el análisis
+            elements.analysisPanel.classList.remove('hidden');
+            if (elements.toggleIcon) {
+              elements.toggleIcon.classList.add('rotate-180');
+            }
+          }
+        } catch (error) {
+          console.error('Error en contraste de imagenes:', error);
+          setError(error.message || 'Error al contrastar las imagenes');
+        } finally {
+          state.isAnalyzing = false;
+          updateButtons();
+          loadAnalysisFile();
+        }
+      };
+
+      const resetApplicationState = () => {
+        // Limpiar el estado
+        state.images = [];
+        state.analysisResult = '';
+        state.analysisMetadata = null;
+        state.removedManagedIds = new Set();
+        state.url = '';
+        state.error = '';
+        
+        // Limpiar el almacenamiento local
+        localStorage.removeItem('savedInstagramImages');
+        localStorage.removeItem(REMOVED_MANAGED_KEY);
+        
+        // Limpiar la interfaz
+        if (elements.analysisPanel) elements.analysisPanel.classList.add('hidden');
+        if (elements.analysisText) elements.analysisText.textContent = '';
+        if (elements.analysisSource) elements.analysisSource.textContent = 'output_analisis.txt';
+        if (elements.analysisLength) elements.analysisLength.textContent = '0';
+        if (elements.errorBox) {
+          elements.errorBox.classList.add('hidden');
+          elements.errorBox.textContent = '';
+        }
+        if (elements.urlInput) elements.urlInput.value = '';
+        
+        // Forzar recarga de miniaturas
+        state.thumbnails = [];
+        state.selectedThumbnailId = null;
+        
+        // Volver a cargar todo
+        loadSavedImages();
+        loadRemovedManagedIds();
+        renderAll();
+        fetchThumbnails();
+        fetchGallery();
+        
+        // Mostrar mensaje de éxito
+        setError('Flujo reiniciado correctamente. Puedes comenzar una nueva iteración.');
+        setTimeout(() => {
+          if (elements.errorBox) elements.errorBox.classList.add('hidden');
+        }, 3000);
+      };
+
+      const init = () => {
+        // Configurar manejador para el botón de reinicio
+        if (elements.resetFlowBtn) {
+          elements.resetFlowBtn.addEventListener('click', resetApplicationState);
+        }
+        
+        loadSavedImages();
+        loadRemovedManagedIds();
+        renderAll();
+        fetchThumbnails();
+        fetchGallery();
+        loadAnalysisFile();
+
+        setInterval(fetchThumbnails, THUMBNAIL_REFRESH_INTERVAL_MS);
+        setInterval(fetchGallery, GALLERY_REFRESH_INTERVAL_MS);
+
+        elements.urlInput.addEventListener('input', (event) => {
+          state.url = event.target.value;
+        });
+
+        elements.extractBtn.addEventListener('click', handleExtract);
+        elements.contrastBtn.addEventListener('click', contrastImages);
+        elements.refreshThumbs.addEventListener('click', () => {
+          fetchThumbnails();
+          fetchGallery();
+        });
+        elements.refreshAnalysisFile.addEventListener('click', loadAnalysisFile);
+        
+        // Agregar manejador para el botón de alternar visibilidad
+        if (elements.toggleAnalysisPanel) {
+          elements.toggleAnalysisPanel.addEventListener('click', toggleAnalysisVisibility);
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', init);
+    </script>
+  </body>
+</html>

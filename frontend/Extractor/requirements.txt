@@ -1,0 +1,11 @@
+flask>=2.0.0
+flask-cors>=3.0.0
+Pillow>=9.0.0  # Using a newer version that has pre-built wheels
+requests>=2.26.0
+selenium>=4.1.0
+webdriver-manager>=3.5.2
+pytesseract>=0.3.10
+opencv-python-headless>=4.5.0  # Required for some image processing with pytesseract
+python-dotenv>=1.0.0
+openai>=1.0.0
+

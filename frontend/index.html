@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docker Auth - Inicio de sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #0ea5e9, #0f172a 60%);
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4 text-slate-100">
+    <main class="w-full max-w-md">
+        <section class="bg-slate-900/80 shadow-2xl rounded-2xl border border-slate-800 backdrop-blur">
+            <div class="px-8 py-10">
+                <div class="mb-8 text-center">
+                    <p class="text-sm uppercase tracking-[0.4em] text-sky-400 font-semibold">Docker Auth</p>
+                    <h1 class="mt-2 text-3xl font-bold text-white">Inicia sesión</h1>
+                    <p class="mt-2 text-sm text-slate-400">Valida tus credenciales contra el contenedor de PostgreSQL.</p>
+                </div>
+
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-slate-200">Usuario</label>
+                        <input id="username" name="username" type="text" required placeholder="alice_smith"
+                            class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-white placeholder:text-slate-500 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40" />
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-slate-200">Contraseña</label>
+                        <input id="password" name="password" type="password" required placeholder="••••••••"
+                            class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-white placeholder:text-slate-500 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/40" />
+                    </div>
+
+                    <button type="submit"
+                        class="w-full rounded-xl bg-sky-500 py-3 text-white font-semibold tracking-wide transition hover:bg-sky-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-400">
+                        Validar credenciales
+                    </button>
+                </form>
+
+                <div id="feedback" class="mt-6 hidden">
+                    <div id="feedbackText" class="rounded-xl border px-4 py-3 text-sm"></div>
+                </div>
+
+                <div class="mt-8 text-xs text-center text-slate-500">
+                    <p>Usuarios precargados: <span class="font-semibold text-slate-200">alice_smith</span>, <span
+                            class="font-semibold text-slate-200">bob_jones</span>, <span
+                            class="font-semibold text-slate-200">charlie_brown</span></p>
+                    <p class="mt-1">(Contraseñas: alice123, bob123, charlie123)</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const feedback = document.getElementById('feedback');
+        const feedbackText = document.getElementById('feedbackText');
+
+        const IMAGE_EXTRACTOR_PATH = '/Extractor/image-extractor.html';
+
+        const getApiBaseUrl = () => {
+            const protocol = window.location.protocol;
+            const host = window.location.hostname;
+            const port = 8000; // publicado por docker-compose
+            return `${protocol}//${host}:${port}`;
+        };
+
+        const redirectToImageExtractor = () => {
+            const origin = window.location.origin;
+            window.location.href = `${origin}${IMAGE_EXTRACTOR_PATH}`;
+        };
+
+        const setFeedback = (message, type) => {
+            feedback.classList.remove('hidden');
+            const styles = {
+                success: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200',
+                error: 'border-rose-500/60 bg-rose-500/10 text-rose-200',
+                info: 'border-sky-500/60 bg-sky-500/10 text-sky-200'
+            };
+            feedbackText.className = `rounded-xl border px-4 py-3 text-sm ${styles[type] ?? styles.info}`;
+            feedbackText.textContent = message;
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const credentials = Object.fromEntries(formData.entries());
+
+            setFeedback('Validando credenciales...', 'info');
+
+            try {
+                const response = await fetch(`${getApiBaseUrl()}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+
+                const body = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(body.detail || 'Error en la autenticación');
+                }
+
+                setFeedback(`✅ ${body.message}. Bienvenido/a ${body.user.username} (${body.user.email}).`, 'success');
+                form.reset();
+
+                setTimeout(() => {
+                    redirectToImageExtractor();
+                }, 1200);
+            } catch (error) {
+                setFeedback(`❌ ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+
+</html>

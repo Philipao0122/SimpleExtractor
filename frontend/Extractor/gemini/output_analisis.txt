@@ -1,0 +1,39 @@
+=== ANÁLISIS COMPARATIVO ===
+
+Nota previa: Los textos proporcionados son titulares sobre tres temas distintos y sin cuerpo de noticia ni medio identificado. El análisis se centra en cómo se construye el mensaje a nivel de titular y puede estar limitado por la falta de contexto.
+
+1) Foco principal de cada noticia
+- Fuente A (Golpe de Estado en Guinea-Bisau): Prioriza el hecho del golpe y subraya la condición de “empobrecido país de África”, lo que añade un marco socioeconómico. Omite actores específicos (líderes, motivos) y contexto histórico o regional.
+- Fuente B (Trump–Maduro): Centra el foco en una cita textual de Trump con contraste “por las buenas/por las malas”, destacando confrontación y presión. Omite contenido de la llamada, respuestas de Maduro, y consecuencias diplomáticas.
+- Fuente C (Corte Suprema y los Uribe): Enfatiza elementos graves (“homicidio”, “manipulación de testigos”) y el “futuro de los Uribe” ante la Corte Suprema, sugiriendo alto impacto político-judicial. Omite evidencia, estado procesal y voces de defensa. (Nótese el posible error tipográfico “Apéstoles”.)
+
+2) Tono y lenguaje
+- Fuente A: Alarmista y emocional con un toque institucional. El adjetivo “empobrecido” carga el encuadre.
+- Fuente B: Político y confrontacional; lenguaje directo basado en cita impactante; cercano a lo sensacional.
+- Fuente C: Crítico y judicial, con léxico técnico-penal pero cargado (“homicidio”, “manipulación”), inclinándose a lo acusatorio.
+
+3) Sesgo o encuadre narrativo
+- Fuente A: Emocional/institucional. Énfasis en vulnerabilidad del país; posible encuadre paternalista hacia África. Enfoque en culpabilidad (militares) sin explicación de causas.
+- Fuente B: Político y emocional. Resalta la dureza de Trump, posible dramatización del conflicto. Enfoque en confrontación más que en explicación diplomática.
+- Fuente C: Político-judicial y crítico. Potencial sesgo anti-Uribe por la acumulación de términos incriminatorios sin matices. Enfoque en culpabilidad.
+
+4) Actor responsabilizado o favorecido
+- Fuente A: Responsabiliza a “los militares”. Favorece implícitamente al orden constitucional/civiles; simplifica al no incluir matices del contexto.
+- Fuente B: Presenta a Trump como actor decisivo; Maduro como destinatario de presión. Puede favorecer la imagen de firmeza de Trump o demonizar a Maduro, según lectura del lector.
+- Fuente C: Señala a “los Uribe” como sujetos de graves señalamientos; la Corte Suprema queda reforzada como árbitro institucional.
+
+5) Comparación breve (tabla)
+
+| Aspecto | Fuente A | Fuente B | Fuente C |
+|---------|----------|----------|----------|
+| Enfoque | Hecho del golpe + marco de pobreza | Cita confrontacional de Trump sobre Maduro | Caso judicial de alto perfil ante la Corte |
+| Tono | Alarmista/emocional-institucional | Político, confrontacional, sensacional | Crítico, judicial, cargado |
+| Sesgo | Emocional/paternalista; pro-institucional | Político/emocional; dramatización del conflicto | Político-judicial; potencial anti-Uribe |
+| Responsable señalado | Militares golpistas | Implícito: Maduro como objetivo; Trump como agente | Los Uribe bajo sospecha; Corte como árbitro |
+| Mensaje implícito | País vulnerable víctima de militares | Se impondrá la voluntad por persuasión o fuerza | La Justicia definirá el destino político de los Uribe |
+
+6) Conclusión ligera
+- La Fuente C es la más crítica y judicializada, usando términos que predisponen al lector hacia la gravedad del caso. La Fuente A combina institucional con emocional, destacando vulnerabilidad y culpabilidad simple. La Fuente B construye un relato político basado en confrontación y una cita llamativa.
+- En términos de construcción del mensaje, A y C enfatizan culpabilidad (militares/Uribe), mientras B enfatiza fuerza y voluntad política.
+- Las omisiones de contexto (causas del golpe, contenido de la llamada, estado procesal) pueden fomentar lecturas rápidas y polarizadas.
+- Impacto probable: A activa empatía/alarma; B refuerza percepciones de dureza o coerción; C puede erosionar o reforzar (según audiencia) la imagen de los Uribe, a la vez que legitima la Corte. Para un juicio equilibrado, haría falta cuerpo de noticia y fuentes identificadas.
